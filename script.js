@@ -1,88 +1,203 @@
 const canvas = document.querySelector('canvas');
-const context = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
 
-let {innerWidth, innerHeight} = window;
+// let {innerWidth, innerHeight} = window;
 
-canvas.height = innerHeight;
-canvas.width = innerWidth;
+canvas.height = 600;
+canvas.width = 1000;
 
-// context.fillStyle = 'rgba(255,0,0,.4)'
-// context.fillRect(100,100,200,200);
+// window.addEventListener('resize', () => {
+//     innerWidth = window.innerWidth;
+//     innerHeight = window.innerHeight;
+//     canvas.height = innerHeight;
+//     canvas.width = innerWidth;
+// })
 
 
-// context.beginPath();
-// context.moveTo(100, 100);
-// context.lineTo(20, 80);
-// context.lineTo(350, 250);
-// context.lineTo(500, 500);
-// context.strokeStyle = 'green';
-// context.stroke();
-
-// for (let i = 0; i < 200; i++) {
-    //     let y = Math.random() * window.innerHeight;
-    //     let x = Math.random() * window.innerWidth;
-    //     context.beginPath();
-    //     context.arc(x,y,30,0, Math.PI * 2, false);
-    //     context.strokeStyle = 'pink';
-    //     context.stroke();
-    // }
-
-let radius = 30;
-
-let circleArray = [];
-let colorArray = ['red','green','blue','yellow'];
-
-for (let i = 0; i < 150; i++) {
-    let x = Math.random() * (innerWidth - radius*2) + radius;
-    let y = Math.random() * (innerHeight - radius*2) + radius;
-    let dx = (Math.random() - 0.5) ;
-    let dy = (Math.random() - 0.5) ;
-    let randomColor = Math.floor(Math.random() * 4);
-    let color = colorArray[randomColor]
-
-    circleArray.push(new Circle(x,y,dx,dy, radius, color));
+function init() {
+    for (let i = 10; i < canvas.height; i += 20) {
+        for (let j = 10; j < canvas.width; j += 20) {
+            ctx.beginPath();
+            ctx.arc(j, i, 10,0, Math.PI * 2, false)
+            ctx.stroke()
+        }
+    }
 }
 
-function Circle (x,y,dx,dy,radius, color) {
-    this.x = x;
-    this.y = y;
-    this.dx = dx;
-    this.dy = dy;
-    this.radius = radius;
-    this.color = color;
+init()
 
-    this.draw  = () => {
-        context.beginPath();
-        context.arc(this.x,this.y,this.radius,0, Math.PI * 2, false);
-        context.strokeStyle = this.color;
-        context.stroke();
-    }
+const getRandomWidthAndHeight = () => {
+    const randomWidth = Math.random() * (0 + canvas.width);
+    const width = randomWidth - (randomWidth % 20);
     
-    this.update = () => {
-        if (this.x + this.radius *2 > innerWidth || this.x - radius < 0) {
-            this.dx = -this.dx;
-        }
-        if (this.y + this.radius*2 > innerHeight || this.y - radius< 0) {
-            this.dy = -this.dy
-        }
-        this.x += this.dx;
-        this.y += this.dy;
+    const randomHeight = Math.random() * (0 + canvas.height);
+    const height = randomHeight - (randomHeight % 20);
+    
+    return { width, height };
+}
+let random = getRandomWidthAndHeight();
+let random2 = getRandomWidthAndHeight();
 
+let speed = 0;
+let x = 20;
+let y = 20;
+let hue = 0;
+let direction = "width";
+let snakeLength = [];
+
+class Snake {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.arc(this.x, this.y, 10,0, Math.PI * 2, false);
+        ctx.fill();
+    }
+    update() {
+        if (this.x > canvas.width - 20) {
+            this.x = 0;
+        }
+        if (this.x < 0) {
+            this.x = canvas.width-20;
+        }
+        if (this.y < 0) {
+            this.y = canvas.height - 20;
+        }
+        if (this.y > canvas.height - 20) {
+            this.y = 0
+        }
+        if (this.x === random2.width && this.y === random2.height) {
+            let newSnake;
+            if (direction === "width") {
+                newSnake = {
+                    width: random2.width - x,
+                    height: random2.height
+                }
+            }
+            if (direction === "height") {
+                newSnake = {
+                    width: random2.width,
+                    height: random2.height - y
+                }
+            }
+            snakeLength.push(new Snake(newSnake.width, newSnake.height));
+            random2 = getRandomWidthAndHeight();
+        }
         this.draw();
     }
-
+    updatePostion(newPositionX, newPositionY) {
+        this.x = newPositionX;
+        this.y = newPositionY;
+        this.draw();
+    }
 }
 
+snakeLength.push(new Snake(random.width, random.height));
 
-
+const changePosition = () => {
+    ctx.fillStyle = 'red'
+    for (let i = 0; i < snakeLength.length; i++) {
+        let previousPostionX = 0;
+        let previousPostionY = 0;
+        let newPostionX = 0;
+        let newPostionY = 0;
+        if (speed === 20) {
+            if (i === 0) {
+                if (direction === "width") {
+                    previousPostionX = snakeLength[i].x;
+                    previousPostionY = snakeLength[i].y;
+                    newPostionX = previousPostionX + x;
+                    newPostionY = previousPostionY
+                }
+                if (direction === "height") {
+                    previousPostionY = snakeLength[i].y;
+                    previousPostionX = snakeLength[i].x;
+                    newPostionX = previousPostionX;
+                    newPostionY = previousPostionY + y;
+                }
+                snakeLength[i].updatePostion(newPostionX, newPostionY);
+                for (let j = i+1; j<snakeLength.length; j++) {
+                    if (snakeLength[0].x === snakeLength[j].x && snakeLength[0].y === snakeLength[j].y) {
+                        snakeLength = snakeLength.slice(0, j);
+                        break;
+                    }
+                    let currentPositionX = snakeLength[j].x;
+                    let currentPositionY = snakeLength[j].y;
+                    snakeLength[j].updatePostion(previousPostionX,previousPostionY);
+                    previousPostionX = currentPositionX;
+                    previousPostionY = currentPositionY;
+                }
+            }
+            speed = 0;
+        };
+    }
+    if (snakeLength[0].x === random2.width && snakeLength[0].y === random2.height) {
+        let newSnake;
+        if (direction === "width") {
+            newSnake = {
+                width: random2.width - x,
+                height: random2.height
+            }
+        }
+        if (direction === "height") {
+            newSnake = {
+                width: random2.width,
+                height: random2.height - y
+            }
+        }
+        snakeLength.push(new Snake(newSnake.width, newSnake.height));
+        random2 = getRandomWidthAndHeight();
+    }
+}
 
 const animate = () => {
     requestAnimationFrame(animate);
-    context.clearRect(0,0,innerWidth,innerHeight);
-    for (let i = 0; i<circleArray.length;i++) {
-        circleArray[i].update();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // init();
+    changePosition();
+    ctx.beginPath();
+    ctx.fillStyle = `hsl(${hue}, 50%, 50%)`;
+    ctx.arc(random2.width, random2.height, 10,0,Math.PI*2,false);
+    ctx.fill();
+    ctx.fillStyle = 'red';
+    for (let i = 0; i < snakeLength.length; i++) {
+        snakeLength[i].update();
     }
+    hue += 1;
+    speed += 1;
 }
 
 animate()
+
+window.addEventListener('keypress', (e) => {
+    let {keyCode} = e;
+    if (keyCode === 119) {
+        direction = 'height';
+        y = -20;
+    }
+    if (keyCode === 97) {
+        direction = 'width';
+        x = -20;
+    }
+    if (keyCode === 100) {
+        direction = 'width';
+        x = 20;
+    }
+    if (keyCode === 115) {
+        direction = 'height';
+        y = 20;
+    }
+})
+
+
+
+
+
+
+
+
+
