@@ -1,6 +1,11 @@
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
+const upButton = document.getElementById('up_button');
+const leftButton = document.getElementById('left_button');
+const bottomButton = document.getElementById('bottom_button');
+const rightButton = document.getElementById('right_button');
+
 
 // let {innerWidth, innerHeight} = window;
 
@@ -191,6 +196,23 @@ window.addEventListener('keypress', (e) => {
         direction = 'height';
         y = 20;
     }
+})
+
+upButton.addEventListener('click', () => {
+    direction = 'height';
+    y = -20;
+})
+leftButton.addEventListener('click', () => {
+    direction = 'width';
+    x = -20;
+})
+bottomButton.addEventListener('click', () => {
+    direction = 'height';
+    y = 20;
+})
+rightButton.addEventListener('click', () => {
+    direction = 'width';
+    x = 20;
 })
 
 
